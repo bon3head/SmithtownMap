@@ -1,0 +1,31 @@
+{
+  "name": "smithtownmap",
+  "version": "0.1.0-ALPHA",
+  "type": "module",
+  "private": true,
+  "description": "Interactive Historical Archive Web App for the Smithtown Historical Society — facts-gated, TDD-aligned, agent-first development.",
+  "scripts": {
+    "dev": "echo 'app dev server not yet scaffolded — see openspec/changes/data-foundation' && exit 1",
+    "build": "echo 'app build not yet scaffolded' && exit 1",
+    "test": "bun test tests/",
+    "facts:check": "facts check",
+    "facts:stage": "bun run scripts/facts-stage.ts",
+    "facts:promote": "bun run scripts/facts-promote.ts",
+    "facts:demote": "bun run scripts/facts-demote.ts",
+    "tdd-guard:report": "bun run scripts/tdd-guard-bun-reporter.ts",
+    "test-quality:lint": "bun run scripts/test-quality-lint.ts",
+    "spec:lint": "bun run scripts/spec-staging-lint.ts",
+    "spec:chronology": "bun run scripts/check-staging-chronology.ts",
+    "spec:contextlint": "bun run scripts/run-contextlint.ts",
+    "tier5:install": "bun run scripts/install-tier5.ts"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.4.1",
+    "@types/bun": "^1.1.14",
+    "@typescript-eslint/parser": "^8.60.0",
+    "eslint": "^10.4.0",
+    "tdd-guard": "^1.6.8",
+    "typescript": "^5.7.0",
+    "yaml": "^2.9.0"
+  }
+}

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Vendored upstream source clones (reference only; each has its own .git)
+vendor/
+
+# Build output
+dist/
+build/
+.svelte-kit/
+.output/
+
+# Atomic-write temp files from the facts ledger scripts
+*.tmp
+.facts.tmp
+.facts.staging.tmp
+
+# TDD Guard runtime state
+.claude/tdd-guard/data/
+
+# Env / secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db

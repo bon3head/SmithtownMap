@@ -1,0 +1,41 @@
+name: spec-staging-lint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .facts.staging
+      - docs/specs/**
+      - openspec/changes/**
+      - scripts/spec-staging-lint.ts
+      - scripts/check-staging-chronology.ts
+      - scripts/run-contextlint.ts
+      - scripts/lib/factsStaging.ts
+      - .contextlintrc.yml
+
+concurrency:
+  group: spec-staging-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  lint:
+    name: spec-staging-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # for the chronology ancestry check
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+      - run: bun install --frozen-lockfile
+      - name: Validate staging structure
+        run: bun run spec:lint
+      - name: Validate chronology
+        run: bun run spec:chronology
+      - name: Run contextlint on SPECs
+        run: bun run spec:contextlint

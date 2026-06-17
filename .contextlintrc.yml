@@ -1,0 +1,31 @@
+# contextlint config — SmithtownMap SPEC structural quality.
+# Consumed by scripts/run-contextlint.ts (inline checker; no external CLI).
+# Applies to docs/specs/*.md authored from the SPEC templates.
+#
+# Implemented rules: required-sections, no-placeholders.
+# Deferred (not yet enforced by the inline checker): cross-references,
+# unique-ids — re-add here once scripts/run-contextlint.ts supports them.
+
+rules:
+  required-sections:
+    enabled: true
+    severity: error
+    sections:
+      - "Intent"
+      - "Scope"
+      - "Facts to Stage"
+      - "Tests to Write (TDD Contract)"
+      - "Risks"
+      - "Review Checklist"
+  no-placeholders:
+    enabled: true
+    severity: error
+    patterns:
+      - "\\bTBD\\b"
+      - "\\bTODO\\b"
+      - "\\bFIXME\\b"
+      - "\\bXXX\\b"
+
+excludePaths:
+  # Templates intentionally contain placeholder/section scaffolding.
+  - docs/specs/templates/**

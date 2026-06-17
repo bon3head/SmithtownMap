@@ -1,0 +1,99 @@
+# .facts.staging — SmithtownMap staged facts awaiting test passage and CI ratification.
+# Schema-version: 1
+#
+# WRITE ONLY via `bun run facts:stage` — never by hand (the protect-facts hook blocks
+# direct writes). Lifecycle: staged here (tag spec) -> facts:promote after the test is
+# green -> facts-bot ratifies into canonical .facts (tag implemented).
+#
+# Each entry: label (with a verbatim [Source §x] pointer), id, command, tags [spec,...],
+# spec back-reference, staged_at, chronology.
+
+- label: "[Scaffold §2a/§2b] ETL parses PastPerfect Dublin Core XML export into
+    raw record dicts (accessno→id, dc:title→title, place, image_url, …)"
+  id: etl-parse
+  command: bun test tests/etl/parse-dublin-core.test.ts
+  tags:
+    - spec
+    - phase1
+    - etl
+  spec: openspec/changes/data-foundation/specs/data-ingestion/spec.md
+  staged_at: 2026-06-17T18:54:06.596Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §3e] ETL normalizes a parsed record into the ArchiveRecord
+    schema (catalog_type, date_year/date_decade derivation, has_image,
+    source=pastperfect_export)"
+  id: etl-normalize
+  command: bun test tests/etl/normalize-record.test.ts
+  tags:
+    - spec
+    - phase1
+    - etl
+  spec: openspec/changes/data-foundation/specs/data-ingestion/spec.md
+  staged_at: 2026-06-17T18:54:06.977Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §2b / Audit: Postgres 16 + PostGIS 3.4] ETL upserts normalized
+    records into Postgres+PostGIS idempotently by accession id, storing lat/lng
+    as geometry"
+  id: etl-load
+  command: bun test tests/etl/load-postgis.test.ts
+  tags:
+    - spec
+    - phase1
+    - etl
+  spec: openspec/changes/data-foundation/specs/data-ingestion/spec.md
+  staged_at: 2026-06-17T18:54:07.376Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §9a] Batch geocoder uses ordered fallback
+    (Smithtown→Suffolk→Long Island→NY) bounded to the LI viewbox, assigning
+    geocode_confidence high/medium/low"
+  id: geocode-batch
+  command: bun test tests/geocoding/batch-geocode.test.ts
+  tags:
+    - spec
+    - phase1
+    - geocoding
+  spec: openspec/changes/data-foundation/specs/geocoding/spec.md
+  staged_at: 2026-06-17T18:54:07.770Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §9c] Local Long Island gazetteer resolves ~200 historical
+    place strings before Nominatim, short-circuiting with confidence=high"
+  id: geocode-gazetteer
+  command: bun test tests/geocoding/gazetteer.test.ts
+  tags:
+    - spec
+    - phase1
+    - geocoding
+  spec: openspec/changes/data-foundation/specs/geocoding/spec.md
+  staged_at: 2026-06-17T18:54:08.175Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §3c/§3e] AAT normalization maps raw lexicon subjects to
+    canonical Getty AAT terms {term,aat_id,hierarchy}; unmapped terms are
+    preserved, never dropped"
+  id: aat-normalize
+  command: bun test tests/tagging/aat-normalize.test.ts
+  tags:
+    - spec
+    - phase1
+    - tagging
+  spec: openspec/changes/data-foundation/specs/tag-normalization/spec.md
+  staged_at: 2026-06-17T18:54:08.576Z
+  chronology:
+    staged_in_commit: pending
+- label: "[Scaffold §7a / Audit: Typesense] Search index built from ArchiveRecord
+    with typed field map (full-text title/description/people; keyword facets;
+    date_year int32; lat/lng geopoint)"
+  id: search-index
+  command: bun test tests/search/typesense-schema.test.ts
+  tags:
+    - spec
+    - phase1
+    - search
+  spec: openspec/changes/data-foundation/specs/search-index/spec.md
+  staged_at: 2026-06-17T18:54:08.980Z
+  chronology:
+    staged_in_commit: pending

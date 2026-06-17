@@ -1,0 +1,25 @@
+# SmithtownMap — Authoritative Facts Ledger (canonical, CI-ratified).
+#
+# Each fact is a testable claim: when its `command` exits 0, the claim is true.
+# Lifecycle: spec (in .facts.staging) -> implemented (promoted here).
+# WRITE ONLY via the facts-bot CI ratification (.github/workflows/promote-facts.yml)
+# or `bun run facts:promote <id>`. NEVER hand-edit (protect-facts hook + Layer-4 trust
+# boundary). No fact is ever removed.
+#
+# ## domain (vocabulary — read first)
+#   record            — one archival object (photo, document, artifact) from PastPerfect.
+#   normalized-record — a record mapped into the ArchiveRecord schema (Scaffold §3e).
+#   collection        — a curated grouping of records (Scaffold §11).
+#   etl               — the PastPerfect -> SmithtownMap ingest pipeline (Scaffold §2).
+#   geocode           — lat/lng + confidence assigned to a record's place (Scaffold §9).
+#   gazetteer         — the local Long Island historical place-name table (Scaffold §9c).
+#   tag-schema        — controlled vocabulary: Dublin Core / VRA Core / Getty AAT (Scaffold §3).
+#   facet             — a filterable search dimension (Scaffold §7b).
+#   cluster           — a map marker aggregating nearby records (Scaffold §4b).
+#
+# Stack note: where the Scaffold names Elasticsearch / Next.js / Leaflet, REPORT_AUDIT.txt
+# supersedes it with Typesense / SvelteKit / MapLibre. Fact labels cite the Scaffold for
+# INTENT and add [Audit: …] where the realization differs.
+#
+# Facts are appended below this header by the promotion pipeline. (Empty: greenfield —
+# every Phase-1 claim currently lives in .facts.staging as @spec, RED.)

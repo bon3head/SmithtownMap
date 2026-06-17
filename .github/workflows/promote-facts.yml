@@ -1,0 +1,96 @@
+name: promote-facts
+
+# Tier 5 Layer 4 — the hard trust boundary. Post-merge, the facts-bot GitHub App
+# re-verifies every staged fact and rewrites passing ones into canonical .facts with
+# an evidence block (promoted_by: facts-bot[bot]). The bot is the ONLY identity that
+# writes .facts on the protected branch. See FACTS_BOT_SETUP.md for the one-time
+# GitHub App + branch-ruleset setup.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .facts.staging
+      - .facts
+
+# Serialize promotions — no parallel races rewriting the ledger.
+concurrency:
+  group: promote-facts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: write # push the promotion commit
+  issues: write # open a needs-attention issue on re-verification failure
+
+jobs:
+  promote:
+    name: promote-facts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Backup recursion guard: the bot's own promotion commit carries [skip ci].
+    if: "${{ !contains(github.event.head_commit.message, '[skip ci]') }}"
+    steps:
+      - name: Generate facts-bot token
+        id: bot-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.FACTS_BOT_APP_ID }}
+          private-key: ${{ secrets.FACTS_BOT_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.bot-token.outputs.token }}
+          fetch-depth: 0 # ci-promote-facts.ts resolves spec_sha / code_sha from git history
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+
+      - run: bun install --frozen-lockfile
+
+      - name: Re-verify and promote staged facts
+        id: promote
+        run: bun run scripts/ci-promote-facts.ts
+
+      - name: Commit promotions
+        if: steps.promote.outputs.promoted != '0' || steps.promote.outputs.failed != '0'
+        run: |
+          git config user.name "facts-bot[bot]"
+          git config user.email "facts-bot[bot]@users.noreply.github.com"
+          git add .facts .facts.staging
+          if git diff --cached --quiet; then
+            echo "No ledger changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(facts): promote ${{ steps.promote.outputs.promoted }} fact(s) [skip ci]"
+          git push
+
+      - name: Open failure issue
+        if: steps.promote.outputs.failed != '0'
+        uses: actions/github-script@v7
+        # Pass untrusted re-verification output via env (NOT string-interpolated into
+        # the script body) to avoid GitHub Actions script injection.
+        env:
+          FAILED_COUNT: ${{ steps.promote.outputs.failed }}
+          FAILURE_DETAILS: ${{ steps.promote.outputs.failure_details }}
+        with:
+          github-token: ${{ steps.bot-token.outputs.token }}
+          script: |
+            const failed = process.env.FAILED_COUNT;
+            const details = process.env.FAILURE_DETAILS || '';
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ facts-bot: ${failed} staged fact(s) failed re-verification`,
+              labels: ['facts-bot', 'needs-attention'],
+              body: [
+                `\`${failed}\` staged fact(s) failed independent CI re-verification at \`${context.sha}\`.`,
+                '',
+                'They remain in `.facts.staging` and were NOT promoted to `.facts`.',
+                '',
+                details,
+              ].join('\n'),
+            });

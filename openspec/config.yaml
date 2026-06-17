@@ -1,0 +1,67 @@
+schema: spec-driven
+
+context: |
+  Project: SmithtownMap — interactive historical-archive web app for the Smithtown
+  Historical Society. Map-first + timeline + faceted search over 3,000+ PastPerfect
+  archival records.
+
+  Runtime: Bun. Frontend: SvelteKit 2 + Svelte 5 Runes. API: Hono on Bun. Data:
+  PostgreSQL 16 + PostGIS 3.4. Search: Typesense. Map: MapLibre GL JS + Supercluster.
+  ETL: Python + a TypeScript ingest wrapper. Test framework: bun:test ONLY (never
+  Jest/Vitest). Source tree: src/<area>/. Tests: tests/<area>/<name>.test.ts.
+
+  AUTHORITATIVE DOC PRECEDENCE (higher wins; see CLAUDE.md §2):
+    1. REPORT_AUDIT.txt (revised stack: SvelteKit/Hono/Typesense/MapLibre/Postgres+PostGIS)
+    2. The Full Project Scaffold (feature intent; cite as "Scaffold §x")
+    3. openspec/changes/<change>/specs/*.md (this layer)
+    4. .facts (post-implementation evidence)
+  Where the Scaffold names Elasticsearch / Next.js / Leaflet, the Audit supersedes it
+  (Typesense / SvelteKit / MapLibre). A fact's label cites the Scaffold section for
+  INTENT; its implementation follows the Audit stack.
+
+  THE .facts LEDGER IS AUTHORITATIVE AND PROTECTED. Format is YAML objects with keys
+  label, id, command, tags ([implemented] or [spec]). OpenSpec MUST NEVER write .facts
+  or .facts.staging directly (no echo/append, no writeFile, no custom script). The ONLY
+  sanctioned writer is `bun run facts:stage` (scripts/facts-stage.ts), which validates
+  the schema, REQUIRES an existing --spec back-ref file, and dedupes ids against both
+  .facts and .facts.staging. Direct writes corrupt the ledger and bypass the four-layer
+  trust model (the facts-bot CI is the only canonical writer of .facts).
+
+  Fact lifecycle: facts:stage -> .facts.staging (tag spec) -> implement TDD-green ->
+  `bun run facts:promote <id>` -> facts-bot CI ratifies canonical .facts (Layer 4).
+  Never hand-edit a fact tag from spec to implemented.
+
+  Real CI gates (do not invent others): spec-staging-lint.yml (spec:lint +
+  spec:chronology + spec:contextlint), test-quality-lint.yml (test-quality:lint), and
+  promote-facts.yml (facts-bot ratification). There is no facts-driven-tests.yml.
+
+rules:
+  tasks:
+    - |
+      Every task introducing a new testable capability MUST include a sub-task that
+      stages a fact via the sanctioned script (never a direct file write), e.g.:
+      bun run facts:stage --id <id> --label "[Scaffold §x] <claim>" --command "bun test tests/<area>/<name>.test.ts" --tags "spec,phase1,<cluster>" --spec openspec/changes/<change>/specs/<x>/spec.md
+    - |
+      Every fact label MUST carry a verbatim spec-section pointer in brackets, e.g.
+      "[Scaffold §3e]" or "[Audit: Typesense]". A fact whose label has no source pointer
+      is invalid and must not be staged. See AGENTS.md "fact-authoring contract".
+    - |
+      The --command test file AND the --spec back-ref file MUST both exist before the
+      fact is staged (spec-staging-lint enforces existence of both).
+    - |
+      Promotion is a SEPARATE later task, run only after the test passes:
+      bun run facts:promote <id>. Never edit a tag from spec to implemented by hand.
+  specs:
+    - |
+      Every requirement touching src/ must name the affected area/module.
+    - |
+      Requirements must be verifiable via bun test (bun:test, not Jest/Vitest).
+    - |
+      A change's own specs/<capability>/spec.md file is a valid --spec back-ref target.
+  design:
+    - |
+      State which stack element (per the Audit) realizes the capability when the Scaffold
+      names a superseded one (Elasticsearch->Typesense, Next.js->SvelteKit, Leaflet->MapLibre).
+    - |
+      Never propose writing .facts or .facts.staging directly or via a bespoke script;
+      the only bridge is bun run facts:stage.

@@ -1,0 +1,29 @@
+name: test-quality-lint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "tests/**/*.test.ts"
+      - scripts/test-quality-lint.ts
+      - scripts/eslint-rules/**
+
+concurrency:
+  group: test-quality-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  lint:
+    name: test-quality-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+      - run: bun install --frozen-lockfile
+      - run: bun run test-quality:lint

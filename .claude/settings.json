@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun *)",
+      "Bash(bunx openspec *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(jq *)",
+      "Bash(grep *)",
+      "Bash(find *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/protect-facts.sh" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/tdd-guard-wrapper.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/post-tool-facts-check.sh" },
+          { "type": "command", "command": "bash .claude/hooks/post-tool-test-quality.sh" }
+        ]
+      }
+    ]
+  }
+}
